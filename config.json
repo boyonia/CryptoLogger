@@ -1,0 +1,22 @@
+{
+  "delay": 0.5,
+  "sources": [
+    {
+      "name": "Binance",
+      "sockets": [
+        {
+          "primary": "wss://stream.binance.com:9443",
+          "backup": "wss://stream.binance.com:443"
+        }
+      ]
+    },
+    {
+      "name": "CoinBase",
+      "sockets": [
+        {
+          "primary": "wss://ws-feed.exchange.coinbase.com"
+        }
+      ]
+    }
+  ]
+}
