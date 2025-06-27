@@ -14,7 +14,6 @@ Both programs:
 ## Project Structure
 
 catcher/
-
 ├── API/
 │ ├── binance.py
 │ ├── coingecko.py
