@@ -99,7 +99,7 @@ Logs are appended to files in the `logs/` folder with entries like:
 
 ``
 {api}.txt
-`` (example ``binance.text``)
+`` (example ``binance.txt``)
 | UTC Time       | Symbol   | Price         | Volume        |
 |----------------|----------|---------------|---------------|
 | 05:21:14.428   | BTCUSDT  | $107422.70    | 0.00004000    |
