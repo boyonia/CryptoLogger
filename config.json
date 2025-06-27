@@ -21,10 +21,6 @@
           "primary": "wss://ws-feed.exchange.coinbase.com"
         }
       ]
-    },
-    {
-      "name": "CoinGecko",
-      "urls": ["https://api.coingecko.com/api/v3/coins/markets"]
     }
   ],
   "stable-coin-keywords": ["usd", "usdt", "usdc", "busd", "dai", "tusd", "usdp", "usdd", "gusd", "fdusd"],

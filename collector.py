@@ -1,7 +1,6 @@
 import requests
 import json
 from API import coingecko
-from API import binance
 from API import cryptocompare
 
 def isStableCoin(coin, stable_keywords):
