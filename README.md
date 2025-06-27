@@ -14,23 +14,41 @@ Both programs:
 ## Project Structure
 
 catcher/
+
 ├── API/
+
 │ ├── binance.py
+
 │ ├── coingecko.py
+
 │ ├── cryptocompare.py
+
 │ └── coinbase.py
+
 ├── logs/
+
 │ ├── binance_log.txt
+
 │ ├── coinbase_log.txt
+
 │ ├── BTC.csv
+
 │ ├── ETH.csv
+
 │ ├── ...
+
 │ ├── TRUMP.csv
+
 │ └── coingecko_log.csv
+
 ├── app.py
+
 ├── collector.py
+
 ├── config.json
+
 ├── requirements.txt
+
 └── README.md
 
 ---
