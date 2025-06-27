@@ -1,5 +1,6 @@
 {
   "delay": 0.5,
+  "market-update-frequency": 60,
   "top-number-of-coins": 50,
   "selection-margin": 20,
   "currency": "usd",

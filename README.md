@@ -1,9 +1,10 @@
 # CryptoAPI Data Logger
-```app.py```
-This Python program connects simultaneously to Binance and Coinbase WebSocket APIs to stream live cryptocurrency trade data (price and volume) for BTC and ETH trading pairs. 
-
 ```collector.py```
 This Python program gets data for the top 50 coins at the moment (excluding stable coins) from CoinGecko and gets historical data for all these coins for the past 3 months from CryptoCompare.
+
+```app.py```
+***DEPRECATED** This Python program connects simultaneously to Binance and Coinbase WebSocket APIs to stream live cryptocurrency trade data (price and volume) for BTC and ETH trading pairs. 
+
 
 Both programs:
 - Timestamped log entries normalized to UTC.
@@ -37,7 +38,7 @@ catcher/
 ## Requirements
 - Python 3.11+
 - Packages:
-	-  `websocket-client`
+	- `websocket-client`
 	- `requests`
 
 Install dependencies via:
@@ -48,18 +49,19 @@ pip install -r requirements.txt
 ## Usage
 Run the main program:
 ```bash
-python  app.py
+python collector.py
 ```
 or
 ```bash
-python collector.py
+python app.py
 ```
 This will:
 - Read `config.json`
 - Start WebSocket streams/connections for APIs
 - Log historical or live data to respective log files
+- **Note:** The program will start to log data at exactly :00 seconds each minute. It is normal to run the program and wait for (at most) a minute to see output logged to ``live_data.csv``
 
-Use `Ctrl+C` to gracefully stop the program
+Use `Ctrl+C` to stop the program
 
 ---
 ## Logging Format
@@ -111,3 +113,7 @@ Logs are appended to files in the `logs/` folder with entries like:
 
 ## Extending
 - Extend to store data in databases (e.g., SQLite, Postgres).
+- Live data could be summarised each day and later be stored as historical data so more in-depth analysis can be performed.
+- Expand for text data.
+- Remove live data that is more than 24hrs old to limit file size(this is much easier to complete in SQL).
+

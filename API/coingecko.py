@@ -8,7 +8,7 @@ def log(coins):
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     log_dir = os.path.join(base_dir, "logs")
     os.makedirs(log_dir, exist_ok = True)
-    log_path = os.path.join(log_dir, "coingecko_log.csv")
+    log_path = os.path.join(log_dir, "live_data.csv")
 
     file_exists = os.path.isfile(log_path)
     
