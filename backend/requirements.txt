@@ -1,2 +1,7 @@
 requests
 transformers
+flask
+pandas
+numpy
+scipy
+torch
