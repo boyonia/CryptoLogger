@@ -1,0 +1,3 @@
+backend/logs/*
+backend/API/__pycache__/*
+backend/API/analysis/__pycache__/*

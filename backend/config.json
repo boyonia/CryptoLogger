@@ -1,0 +1,12 @@
+{
+  "delay": 0.5,
+  "market-update-frequency": 60,
+  "top-number-of-coins": 50,
+  "selection-margin": 20,
+  "currency": "usd",
+  "historical-data-days": 90,
+  "stable-coin-keywords": ["usd", "usdt", "usdc", "busd", "dai", "tusd", "usdp", "usdd", "gusd", "fdusd"],
+  "coins_ignored": ["cbbtc", "wsteth", "lbtc"],
+  "newsapi_key": ["b79ec728d106476082dece11f61b4223", "6ce0b1037e244e11ad7dbca45427368b", "52a553e2111147c1a88d17e807030d35", "5789f146a1dd452f9005687d0b30d818", "a8c114ae82c34a40aae85cb019bc594f"],
+  "media-interval": 2
+}
