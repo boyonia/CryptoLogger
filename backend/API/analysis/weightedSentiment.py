@@ -73,3 +73,5 @@ def computeWeightedSentiment(symbols):
 
     log(results)
 
+    print(f"[Analysis] Weighted sentiment score calculated")
+
