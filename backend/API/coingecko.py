@@ -2,43 +2,65 @@ import csv
 import os
 import requests
 import time
-from datetime import datetime, timezone
+from .analysis import priceOutlier
+from datetime import datetime, timezone, timedelta
 
 def log(coins):
-    timestamp = datetime.now(timezone.utc).strftime("%H:%M:%S.%f")[:-3]
+    now = datetime.now(timezone.utc)
+    timestamp = now.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+    cutoff = now - timedelta(hours=24)
 
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    log_dir = os.path.join(base_dir, "logs/live_data")
-    os.makedirs(log_dir, exist_ok = True)
+    log_dir = os.path.join(base_dir, "logs", "live_data")
+    os.makedirs(log_dir, exist_ok=True)
     log_path = os.path.join(log_dir, "live_data.csv")
 
-    file_exists = os.path.isfile(log_path)
-    
-    with open(log_path, 'a', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
+    # Load existing entries and filter out ones older than 24 hours
+    filtered_entries = []
+    if os.path.exists(log_path):
+        with open(log_path, 'r', newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    row_time = datetime.strptime(row['timestamp'], "%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=timezone.utc)
+                    if row_time >= cutoff:
+                        filtered_entries.append(row)
+                except Exception:
+                    continue  # Skip rows with invalid or missing timestamps
 
-        if not file_exists:
-            writer.writerow([
-                'timestamp',
-                'symbol',
-                'price',
-                'market_cap',
-                'total_volume',
-                'price_change_pct_24h',
-                'market_cap_change_pct_24h'
-            ])
+    # Append new entries
+    for coin in coins:
+        # Replace this with actual outlier detection logic
+        price_outlier_flag = 't' if priceOutlier.isPriceOutlier(coin['symbol'].upper(), coin['current_price']) else 'f'
 
-        for coin in coins:
-            writer.writerow([
-                timestamp,
-                coin['symbol'].upper(),
-                coin['current_price'],
-                coin['market_cap'],
-                coin['total_volume'],
-                coin.get('price_change_percentage_24h', 0.0),
-                coin.get('market_cap_change_percentage_24h', 0.0)
-            ])
-    
+        entry = {
+            'timestamp': timestamp,
+            'symbol': coin['symbol'].upper(),
+            'price': coin['current_price'],
+            'market_cap': coin['market_cap'],
+            'total_volume': coin['total_volume'],
+            'price_change_pct_24h': coin.get('price_change_percentage_24h', 0.0),
+            'market_cap_change_pct_24h': coin.get('market_cap_change_percentage_24h', 0.0),
+            'price_outlier_flag': price_outlier_flag
+        }
+        filtered_entries.append(entry)
+
+    # Rewrite the CSV file with the updated list
+    with open(log_path, 'w', newline='', encoding='utf-8') as f:
+        fieldnames = [
+            'timestamp',
+            'symbol',
+            'price',
+            'market_cap',
+            'total_volume',
+            'price_change_pct_24h',
+            'market_cap_change_pct_24h',
+            'price_outlier_flag'
+        ]
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(filtered_entries)
+
     print(f"[CoinGecko] Live data logged.")
 
 def logHistorical(symbol, history):

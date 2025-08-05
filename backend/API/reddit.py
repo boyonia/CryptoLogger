@@ -2,7 +2,6 @@ import csv
 import os
 import requests
 import time
-import json
 from collections import defaultdict
 from transformers import pipeline
 from .analysis import sentiment
@@ -13,14 +12,15 @@ classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnl
 
 def log(symbol, posts):
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    log_dir = os.path.join(base_dir, "logs/reddit_posts")
-    os.makedirs(log_dir, exist_ok = True)
+    log_dir = os.path.join(base_dir, "logs", "reddit_posts")
+    os.makedirs(log_dir, exist_ok=True)
     log_path = os.path.join(log_dir, f"{symbol}.csv")
 
     existing_entries = []
     seen_ids = set()
     one_month_ago = datetime.now(timezone.utc) - timedelta(days=30)
 
+    # Read existing posts and filter for last 30 days
     if os.path.exists(log_path):
         with open(log_path, 'r', newline='', encoding='utf-8') as f:
             reader = csv.DictReader(f)
@@ -29,27 +29,37 @@ def log(symbol, posts):
                     created = datetime.fromisoformat(row['created_utc'])
                     if created >= one_month_ago:
                         existing_entries.append(row)
-                        seen_ids.add(row['post_id'])  # use actual post ID
-                except:
+                        seen_ids.add(row['post_id'])  # track IDs to avoid duplicates
+                except Exception:
                     continue  # skip malformed rows
-                    
+
+    # Append only new posts (no duplicates)
     for post in posts:
         post_id = post.get('id', '')
+        if post_id in seen_ids:
+            continue  # skip duplicates
+
         title = post.get('title', '')
         selftext = post.get('selftext', '')
         sentiment_score = sentiment.getSentimentScore(f"{title} {selftext}")
         created_utc = post.get('created_utc', 0)
 
-        existing_entries.append({
+        new_entry = {
             'post_id': post_id,
+            'subreddit': post.get('subreddit', ''),
             'title': title,
             'score': post.get('score', 0),
             'created_utc': datetime.fromtimestamp(created_utc, tz=timezone.utc).isoformat(sep=' '),
             'sentiment_score': sentiment_score,
-        })
+        }
 
+        existing_entries.append(new_entry)
+        seen_ids.add(post_id)  # add new ID
+
+    # Sort entries newest first
     existing_entries.sort(key=lambda x: datetime.fromisoformat(x['created_utc']), reverse=True)
 
+    # Write all entries back to CSV
     with open(log_path, 'w', newline='', encoding='utf-8') as f:
         fieldnames = ['post_id', 'subreddit', 'title', 'score', 'created_utc', 'sentiment_score']
         writer = csv.DictWriter(f, fieldnames=fieldnames)

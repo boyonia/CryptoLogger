@@ -9,6 +9,7 @@ from API import coingecko
 from API import cryptocompare
 from API import news
 from API import reddit
+from API.analysis import weightedSentiment
 
 SECONDS_IN_A_DAY = 86400
 MINUTE_TO_SECONDS = 60
@@ -102,6 +103,8 @@ def continuousCollection():
                 if reddit_thread is None or not reddit_thread.is_alive():
                     reddit_thread = threading.Thread(target=reddit.fetchRedditPosts, args=(coins, config), daemon=True)
                     reddit_thread.start()
+
+                weightedSentiment.computeWeightedSentiment(coins)
                 minute_counter = 0
 
             if seconds_today >= SECONDS_IN_A_DAY - MINUTE_TO_SECONDS and last_run_day != current_day:
@@ -143,12 +146,13 @@ def continuousCollection():
                         reddit_thread = threading.Thread(target=reddit.fetchRedditPosts, args=(new_symbols, config), daemon=True)
                         reddit_thread.start()
 
+                    weightedSentiment.computeWeightedSentiment(coins)
                     last_top_symbols.update(new_symbols)
                     last_top_ids.update(new_ids)
                     last_top_names.update(new_names)
 
         except Exception as e:
-            print(f"[error] {e}")
+            print(f"[Collector Error] {e}")
 
 if __name__ == "__main__":
     continuousCollection()
