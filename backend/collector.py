@@ -8,6 +8,7 @@ from datetime import datetime, timezone, timedelta
 from API import coingecko
 from API import cryptocompare
 from API import news
+from API import reddit
 
 SECONDS_IN_A_DAY = 86400
 MINUTE_TO_SECONDS = 60
@@ -69,6 +70,7 @@ def continuousCollection():
     cc_thread = None
     cg_thread = None
     news_thread = None
+    reddit_thread = None
 
     with open("config.json") as f:
         config = json.load(f)
@@ -97,6 +99,9 @@ def continuousCollection():
                 if news_thread is None or not news_thread.is_alive():
                     news_thread = threading.Thread(target=news.fetchCryptoNews, args=(coins, names), daemon=True)
                     news_thread.start()
+                if reddit_thread is None or not reddit_thread.is_alive():
+                    reddit_thread = threading.Thread(target=reddit.fetchRedditPosts, args=(coins, config), daemon=True)
+                    reddit_thread.start()
                 minute_counter = 0
 
             if seconds_today >= SECONDS_IN_A_DAY - MINUTE_TO_SECONDS and last_run_day != current_day:
@@ -133,6 +138,10 @@ def continuousCollection():
                     if news_thread is None or not news_thread.is_alive():
                         news_thread = threading.Thread(target=news.fetchCryptoNews, args=(new_symbols, new_names), daemon=True)
                         news_thread.start()
+
+                    if reddit_thread is None or not reddit_thread.is_alive():
+                        reddit_thread = threading.Thread(target=reddit.fetchRedditPosts, args=(new_symbols, config), daemon=True)
+                        reddit_thread.start()
 
                     last_top_symbols.update(new_symbols)
                     last_top_ids.update(new_ids)

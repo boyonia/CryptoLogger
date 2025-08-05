@@ -130,7 +130,7 @@ def isRelevantArticle(article, target_coin_name, target_symbol, other_crypto_sym
     
     return True
 
-def get_next_api_key():
+def getNextAPIKey():
     """Get the next API key in rotation"""
     global current_api_key_index
     config = load_config()
@@ -161,7 +161,7 @@ def fetchCoinNews(coin_name, coin_symbol, other_crypto_symbols):
     max_retries = len(api_keys)
     
     for attempt in range(max_retries):
-        api_key = get_next_api_key()
+        api_key = getNextAPIKey()
         if not api_key:
             print("[NewsAPI] No API keys available")
             return []
@@ -193,7 +193,7 @@ def fetchCoinNews(coin_name, coin_symbol, other_crypto_symbols):
                 if isRelevantArticle(article, coin_name, coin_symbol, other_crypto_symbols)
             ]
             
-            print(f"[NewsAPI] Filtered {len(articles)} articles down to {len(filtered_articles)} relevant articles for {coin_name} using API key {current_api_key_index}")
+            print(f"[NewsAPI] {len(filtered_articles)}/{len(articles)} relevant articles for {coin_symbol} with API key {current_api_key_index}")
             return filtered_articles
             
         except requests.exceptions.HTTPError as e:
@@ -231,5 +231,4 @@ def fetchCryptoNews(coins, names):
         
         data = fetchCoinNews(name, coin, other_symbols)
         log(coin, data)
-        print(f"[NewsAPI] {name} ({coin}) news logged")
         time.sleep(2)  # Add 2 second delay between requests

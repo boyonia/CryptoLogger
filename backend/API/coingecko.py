@@ -31,7 +31,7 @@ def log(coins):
         for coin in coins:
             writer.writerow([
                 timestamp,
-                coin['symbol'],
+                coin['symbol'].upper(),
                 coin['current_price'],
                 coin['market_cap'],
                 coin['total_volume'],
