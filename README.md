@@ -1,119 +1,328 @@
-# CryptoAPI Data Logger
-```collector.py```
-This Python program gets data for the top 50 coins at the moment (excluding stable coins) from CoinGecko and gets historical data for all these coins for the past 3 months from CryptoCompare.
+# Cryptometrics Backend
 
-```app.py```
-***DEPRECATED** This Python program connects simultaneously to Binance and Coinbase WebSocket APIs to stream live cryptocurrency trade data (price and volume) for BTC and ETH trading pairs. 
+A comprehensive cryptocurrency data collection system that fetches live market data, historical prices, news articles, and social media sentiment from multiple sources. The backend continuously monitors cryptocurrency markets and aggregates data for analysis and visualization.
 
+## Overview
 
-Both programs:
-- Timestamped log entries normalized to UTC.
-- Throttled logging frequency configurable via `config.json`.
+Cryptometrics connects to multiple APIs to collect:
+- **Live Market Data**: Real-time price, market cap, and volume from CoinGecko
+- **Historical Price Data**: Daily OHLCV data from CoinGecko and CryptoCompare
+- **News Articles**: Cryptocurrency news with sentiment analysis from NewsAPI
+- **Social Media**: Reddit posts with sentiment scoring from relevant subreddits
+- **Sentiment Analysis**: Weighted sentiment scores combining news and social data
 
----
+## Architecture
 
-## Project Structure
 ```
-catcher/
+backend/
 ├── API/
-│ ├── binance.py
-│ ├── coingecko.py
-│ ├── cryptocompare.py
-│ └── coinbase.py
+│   ├── coingecko.py          # CoinGecko API integration
+│   ├── cryptocompare.py      # CryptoCompare historical data
+│   ├── news.py               # NewsAPI integration
+│   ├── reddit.py             # Reddit API integration
+│   ├── analysis/
+│   │   ├── sentiment.py      # Sentiment analysis
+│   │   ├── weightedSentiment.py  # Combined sentiment scoring
+│   │   └── priceOutlier.py   # Price anomaly detection
+│   └── maps/
+│       └── subreddit_map.py  # Cryptocurrency subreddit mappings
 ├── logs/
-│ ├── binance_log.txt
-│ ├── coinbase_log.txt
-│ ├── BTC.csv
-│ ├── ETH.csv
-│ ├── ...
-│ ├── TRUMP.csv
-│ └── coingecko_log.csv
-├── app.py
-├── collector.py
-├── config.json
-├── requirements.txt
-└── README.md
+│   ├── live_data/           # Real-time market data
+│   ├── hist_data/           # Historical price data (CryptoCompare)
+│   ├── hist_data_backup/    # Historical price data (CoinGecko)
+│   ├── news_articles/       # News articles by cryptocurrency
+│   └── reddit_posts/        # Reddit posts by cryptocurrency
+├── collector.py             # Main data collection orchestrator
+├── server.py               # Flask API server
+├── config.json             # Configuration file
+└── requirements.txt        # Python dependencies
 ```
----
-## Requirements
-- Python 3.11+
-- Packages:
-	- `websocket-client`
-	- `requests`
 
-Install dependencies via:
-```
+## Installation
+
+### Prerequisites
+- Python 3.9+
+- pip package manager
+
+### Setup
+1. Download the repository
+
+2. Install dependencies:
+```bash
 pip install -r requirements.txt
 ```
 
-## Usage
-Run the main program:
+3. Configure API keys in `config.json` (see Configuration section)
+
+4. Run the data collector:
 ```bash
 python collector.py
 ```
-or
+
+5. (Optional) Start the API server:
 ```bash
-python app.py
+python server.py
 ```
-This will:
-- Read `config.json`
-- Start WebSocket streams/connections for APIs
-- Log historical or live data to respective log files
-- **Note:** The program will start to log data at exactly :00 seconds each minute. It is normal to run the program and wait for (at most) a minute to see output logged to ``live_data.csv``
 
-Use `Ctrl+C` to stop the program
+## Configuration (`config.json`)
 
----
-## Logging Format
-Logs are appended to files in the `logs/` folder with entries like:
+The configuration file controls all aspects of data collection behavior. Each parameter affects how and when data is fetched from different sources.
 
-``
-{symbol}.csv
-`` (example ``BTC.csv``)
-| Date       | Open     | High     | Low      | Close    | Volume         |
-|------------|----------|----------|----------|----------|----------------|
-| 2025-03-30 | 82625.65 | 83516.72 | 81563.47 | 82379.51 | 839590269.08   |
-| 2025-03-31 | 82379.51 | 83917.40 | 81290.13 | 82539.52 | 1894666416.64  |
-| 2025-04-01 | 82539.52 | 85554.98 | 82419.98 | 85174.96 | 1962356062.59  |
-| 2025-04-02 | 85174.96 | 88505.24 | 82299.20 | 82490.58 | 3519914220.40  |
-| 2025-04-03 | 82490.58 | 83928.41 | 81178.57 | 83158.80 | 2335462308.44  |
-| 2025-04-04 | 83158.80 | 84716.02 | 81648.68 | 83860.21 | 3085885741.07  |
-| 2025-04-05 | 83860.21 | 84230.44 | 82357.52 | 83503.37 | 622496989.40   |
-| 2025-04-06 | 83503.37 | 83756.10 | 77079.93 | 78365.57 | 2374631982.20  |
-| 2025-04-07 | 78365.57 | 81172.27 | 74426.93 | 79143.06 | 5546499783.12  |
-| 2025-04-08 | 79143.06 | 80835.83 | 76181.24 | 76255.10 | 3084760820.88  |
+### Market Data Collection
 
-``
-{api}.csv
-`` (example ``coingecko.csv``)
-| Timestamp     | Symbol | Price     | Market Cap     | Total Volume   | 24h Price Change (%) | 24h Market Cap Change (%) |
-|---------------|--------|-----------|----------------|----------------|------------------------|----------------------------|
-| 12:35:02.229  | btc    | 107190    | 2131455651436  | 31514043904    | 0.12328                | 0.09653                    |
-| 12:35:02.229  | eth    | 2443.93   | 294888666880   | 18149262316    | 0.99369                | 0.82592                    |
-| 12:35:02.229  | xrp    | 2.17      | 127796191896   | 2225314671     | -1.09381               | -1.02644                   |
-| 12:35:02.229  | bnb    | 643.22    | 93829511886    | 659794268      | -0.58924               | -0.6376                    |
-| 12:35:02.229  | sol    | 143.38    | 76609520799    | 3802918286     | -1.60658               | -1.06942                   |
-| 12:35:02.229  | trx    | 0.271099  | 25702310046    | 566669467      | -0.53095               | -0.58762                   |
-| 12:35:02.229  | doge   | 0.161117  | 24142559096    | 965597468      | -2.19322               | -2.32091                   |
-| 12:35:02.229  | steth  | 2442.17   | 22348684630    | 18632883       | 0.97882                | 0.86321                    |
-| 12:35:02.229  | ada    | 0.560103  | 20236235400    | 553364995      | -2.9181                | -2.88729                   |
-| 12:35:02.229  | wbtc   | 107170    | 13799053714    | 237872356      | 0.25949                | 0.12163                    |
+#### `market-update-frequency`
+- **Type**: Integer (seconds)
+- **Default**: 60
+- **Effect**: Controls how often the main collection loop runs
+- **Impact**: 
+  - Lower values = more frequent market updates and API calls
+  - Higher values = less frequent updates, reduced API usage
+  - Minimum recommended: 60 seconds to avoid rate limits
 
-``
-{api}.txt
-`` (example ``binance.txt``)
-| UTC Time       | Symbol   | Price         | Volume        |
-|----------------|----------|---------------|---------------|
-| 05:21:14.428   | BTCUSDT  | $107422.70    | 0.00004000    |
-| 05:21:15.131   | BTCUSDT  | $107422.69    | 0.01820000    |
-| 05:21:15.953   | BTCUSDT  | $107422.69    | 0.00040000    |
-| 05:21:17.283   | ETHUSDT  | $2439.22      | 0.05000000    |
-| 05:21:18.104   | BTCUSDT  | $107422.69    | 0.02011000    |
-| 05:21:18.827   | ETHUSDT  | $2439.55      | 0.10900000    |
+#### `top-number-of-coins`
+- **Type**: Integer
+- **Default**: 50
+- **Effect**: Number of top cryptocurrencies to track by market cap
+- **Impact**:
+  - More coins = more data collection across all sources
+  - Increases API calls, storage, and processing time
+  - Affects news and Reddit data collection volume
 
-## Extending
-- Extend to store data in databases (e.g., SQLite, Postgres).
-- Live data could be summarised each day and later be stored as historical data so more in-depth analysis can be performed.
-- Expand for text data.
-- Remove live data that is more than 24hrs old to limit file size(this is much easier to complete in SQL).
+#### `selection-margin`
+- **Type**: Integer
+- **Default**: 20
+- **Effect**: Additional coins to fetch beyond the top N to filter out stablecoins
+- **Impact**:
+  - Ensures you get exactly `top-number-of-coins` after filtering
+  - Higher margin = more stable coin detection but more API calls
+  - Recommended: 20-50% of `top-number-of-coins`
 
+#### `currency`
+- **Type**: String
+- **Default**: "usd"
+- **Effect**: Base currency for price data
+- **Impact**:
+  - Must match CoinGecko and CryptoCompare supported currencies
+  - Affects all price calculations and historical data
+  - Common options: "usd", "eur", "btc", "eth"
+
+### Historical Data Configuration
+
+#### `historical-data-days`
+- **Type**: Integer
+- **Default**: 90
+- **Effect**: Number of days of historical price data to fetch
+- **Impact**:
+  - More days = larger initial data fetch and longer processing
+  - Affects analysis capabilities and storage requirements
+  - CoinGecko API limits may apply for longer periods
+
+### Filtering and Selection
+
+#### `stable-coin-keywords`
+- **Type**: Array of strings
+- **Default**: ["usd", "usdt", "usdc", "busd", "dai", "tusd", "usdp", "usdd", "gusd", "fdusd"]
+- **Effect**: Keywords used to identify and filter out stablecoins
+- **Impact**:
+  - Prevents stablecoins from being included in top coins
+  - Matching is case-insensitive against coin name and symbol
+  - Add new stablecoin identifiers as they emerge
+
+#### `coins_ignored`
+- **Type**: Array of strings
+- **Default**: ["cbbtc", "wsteth", "lbtc"]
+- **Effect**: Specific coin symbols to exclude from collection
+- **Impact**:
+  - Manually removes unwanted coins (wrapped tokens, derivatives)
+  - Symbols are matched case-insensitively
+  - Useful for excluding synthetic or derivative tokens
+
+### News Collection
+
+#### `newsapi_key`
+- **Type**: Array of strings
+- **Effect**: NewsAPI keys for fetching cryptocurrency news
+- **Impact**:
+  - Multiple keys enable key rotation to avoid rate limits
+  - Keys are used in round-robin fashion
+  - More keys = higher news collection capacity
+  - Each key allows ~1000 requests per day
+
+#### `media-interval`
+- **Type**: Integer (minutes)
+- **Default**: 5
+- **Effect**: How often to fetch news and Reddit data
+- **Impact**:
+  - Lower values = more frequent news updates but higher API usage
+  - News sources update multiple times per hour
+  - Minimum recommended: 5 minutes to avoid rate limits
+  - Affects both news and Reddit collection timing
+
+### Social Media Configuration
+
+#### `KEYWORDS`
+- **Type**: Array of strings
+- **Default**: ["crypto statistics or news", "money gain or loss"]
+- **Effect**: Keywords for zero-shot classification of relevant Reddit posts
+- **Impact**:
+  - Determines which Reddit posts are considered relevant
+  - Uses BART model for semantic matching
+  - More specific keywords = more precise filtering
+  - Broader keywords = more posts but potentially less relevant
+
+#### `BLOCKLIST`
+- **Type**: Array of strings
+- **Default**: ["joke", "funny", "shitpost", "troll", "satire", "sarcasm", "clown", "cringe", "banter", "comic", "gag"]
+- **Effect**: Keywords to filter out non-serious content
+- **Impact**:
+  - Removes meme posts and joke content
+  - Improves data quality for sentiment analysis
+  - Case-insensitive matching against post title and content
+  - Add terms specific to cryptocurrency meme culture
+
+## Data Collection Behavior
+
+### Collection Timing
+
+1. **Every Minute**: 
+   - Fetches top coins from CoinGecko
+   - Logs live market data
+   - Updates price outlier detection
+
+2. **Every `media-interval` Minutes**:
+   - Fetches news articles for all tracked coins
+   - Collects Reddit posts from relevant subreddits
+   - Computes weighted sentiment scores
+
+3. **Daily (at 23:59 UTC)**:
+   - Triggers full historical data update
+   - Fetches complete price history for all coins
+   - Updates both CoinGecko and CryptoCompare datasets
+
+4. **New Coin Detection**:
+   - When new coins enter the top N, immediately fetches their data
+   - Collects full historical data and recent news/social media
+
+### API Rate Limiting
+
+The system implements several rate limiting strategies:
+
+- **CoinGecko**: 3-second delays between historical requests
+- **CryptoCompare**: 0.5-second delays between requests
+- **NewsAPI**: Key rotation when rate limits hit
+- **Reddit**: 0.5-second delays, 10-second delays between subreddits
+
+### Data Storage
+
+All data is stored in CSV format under the `logs/` directory:
+
+- **Live Data**: Rolling 24-hour window
+- **Historical Data**: Rolling 30-day window for performance
+- **News Articles**: Rolling 7-day window
+- **Reddit Posts**: Rolling 30-day window
+
+## API Endpoints
+
+The Flask server (`server.py`) provides REST endpoints for accessing collected data:
+
+### `GET /api/files`
+Returns the structure of all available CSV files grouped by folder.
+
+### `GET /api/file/<folder>/<filename>`
+Returns the contents of a specific CSV file as JSON.
+
+### `GET /api/live`
+Returns current live market data from `live_data/live_data.csv`.
+
+### `GET /api/live_sentiment`
+Returns current sentiment data from `live_data/live_sentiment.csv`.
+
+## Configuration Examples
+
+### High-Frequency Trading Setup
+```json
+{
+  "market-update-frequency": 30,
+  "top-number-of-coins": 20,
+  "media-interval": 3,
+  "historical-data-days": 30
+}
+```
+
+### Research/Analysis Setup
+```json
+{
+  "market-update-frequency": 300,
+  "top-number-of-coins": 100,
+  "media-interval": 15,
+  "historical-data-days": 365
+}
+```
+
+### Resource-Constrained Setup
+```json
+{
+  "market-update-frequency": 300,
+  "top-number-of-coins": 10,
+  "media-interval": 30,
+  "historical-data-days": 30
+}
+```
+
+## Monitoring and Logs
+
+The system provides console output for monitoring:
+- `[CoinGecko]`: Live and historical market data updates
+- `[CryptoCompare]`: Historical price data collection
+- `[NewsAPI]`: News article fetching with API key rotation
+- `[Reddit]`: Social media post collection
+- `[Collector Error]`: Main loop errors and exceptions
+
+## Dependencies
+
+Core Python packages required:
+- `requests`: HTTP API calls
+- `transformers`: Sentiment analysis and zero-shot classification
+- `flask`: API server
+- `pandas`: Data manipulation (server only)
+- `numpy`, `scipy`: Numerical computing
+- `torch`: PyTorch for transformer models
+
+## Troubleshooting
+
+### Common Issues
+
+1. **API Rate Limits**:
+   - Increase delays in configuration
+   - Add more NewsAPI keys
+   - Reduce `top-number-of-coins`
+
+2. **Memory Usage**:
+   - Reduce `historical-data-days`
+   - Decrease `top-number-of-coins`
+   - Clear old log files periodically
+
+3. **Missing Data**:
+   - Check API key validity
+   - Verify network connectivity
+   - Review console logs for specific errors
+
+### Performance Optimization
+
+- Use SSD storage for faster CSV operations
+- Consider database storage for larger datasets
+- Implement data compression for long-term storage
+- Monitor system resources during collection
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make changes with appropriate tests
+4. Submit a pull request
+
+For questions or issues, please open a GitHub issue.

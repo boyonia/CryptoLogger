@@ -106,7 +106,6 @@ def logHistorical(symbol, history):
 
     print(f"[CoinGecko] Historical data fetched for: {symbol}")
 
-
 def fetchDailyHistory(name, currency, days):
     url = f"https://api.coingecko.com/api/v3/coins/{name}/market_chart"
     params = {
