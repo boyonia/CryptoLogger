@@ -59,8 +59,12 @@ def computeWeightedSentiment(symbols):
     for symbol in symbols:
         news_score, news_count = getAverageNewsSentiments(symbol)
         reddit_score, reddit_count = getAverageRedditSentiments(symbol)
-
-        weighted_score = 0.8 * news_score + 0.2 * reddit_score if news_count >= 3 else 0.0
+        if reddit_count == 0:
+            weighted_score = news_score
+        elif news_count == 0:
+            weighted_score = 0.0
+        else: 
+            weighted_score = 0.8 * news_score + 0.2 * reddit_score
 
         results.append({
             'symbol': symbol.upper(),
