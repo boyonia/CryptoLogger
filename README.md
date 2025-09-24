@@ -1,10 +1,10 @@
-# Cryptometrics Backend
+# CryptoLogger
 
-A comprehensive cryptocurrency data collection system that fetches live market data, historical prices, news articles, and social media sentiment from multiple sources. The backend continuously monitors cryptocurrency markets and aggregates data for analysis and visualization.
+A cryptocurrency data collection system that fetches live market data, historical prices, news articles, and social media sentiment from multiple sources. The program continuously monitors cryptocurrency markets and aggregates data for analysis and visualization.
 
 ## Overview
 
-Cryptometrics connects to multiple APIs to collect:
+The program connects to multiple APIs to collect:
 - **Live Market Data**: Real-time price, market cap, and volume from CoinGecko
 - **Historical Price Data**: Daily OHLCV data from CoinGecko and CryptoCompare
 - **News Articles**: Cryptocurrency news with sentiment analysis from NewsAPI
@@ -14,35 +14,35 @@ Cryptometrics connects to multiple APIs to collect:
 ## Architecture
 
 ```
-backend/
+CryptoLogger/
 ├── API/
-│   ├── coingecko.py          # CoinGecko API integration
-│   ├── cryptocompare.py      # CryptoCompare historical data
-│   ├── news.py               # NewsAPI integration
-│   ├── reddit.py             # Reddit API integration
+│   ├── coingecko.py              # CoinGecko API integration
+│   ├── cryptocompare.py          # CryptoCompare historical data
+│   ├── news.py                   # NewsAPI integration
+│   ├── reddit.py                 # Reddit API integration
 │   ├── analysis/
-│   │   ├── sentiment.py      # Sentiment analysis
+│   │   ├── sentiment.py          # Sentiment analysis
 │   │   ├── weightedSentiment.py  # Combined sentiment scoring
-│   │   └── priceOutlier.py   # Price anomaly detection
+│   │   └── priceOutlier.py       # Price anomaly detection
 │   └── maps/
-│       └── subreddit_map.py  # Cryptocurrency subreddit mappings
+│       └── subreddit_map.py      # Cryptocurrency subreddit mappings
 ├── logs/
-│   ├── live_data/           # Real-time market data
-│   ├── hist_data/           # Historical price data (CryptoCompare)
-│   ├── hist_data_backup/    # Historical price data (CoinGecko)
-│   ├── news_articles/       # News articles by cryptocurrency
-│   └── reddit_posts/        # Reddit posts by cryptocurrency
-├── collector.py             # Main data collection orchestrator
-├── server.py               # Flask API server
-├── config.json             # Configuration file
-└── requirements.txt        # Python dependencies
+│   ├── live_data/                # Real-time market data
+│   ├── hist_data/                # Historical price data (CryptoCompare)
+│   ├── hist_data_backup/         # Historical price data (CoinGecko)
+│   ├── news_articles/            # News articles by cryptocurrency
+│   └── reddit_posts/             # Reddit posts by cryptocurrency
+├── collector.py                  # Main data collection orchestrator
+├── server.py                     # Flask API server
+├── config.json                   # Configuration file
+└── requirements.txt              # Python dependencies
 ```
 
 ## Installation
 
 ### Prerequisites
 - Python 3.9+
-- pip package manager
+- pip
 
 ### Setup
 1. Download the repository
@@ -52,7 +52,7 @@ backend/
 pip install -r requirements.txt
 ```
 
-3. Configure API keys in `config.json` (see Configuration section)
+3. Insert own API keys in `config.json` (see Configuration section)
 
 4. Run the data collector:
 ```bash
@@ -68,16 +68,7 @@ python server.py
 
 The configuration file controls all aspects of data collection behavior. Each parameter affects how and when data is fetched from different sources.
 
-### Market Data Collection
-
-#### `market-update-frequency`
-- **Type**: Integer (seconds)
-- **Default**: 60
-- **Effect**: Controls how often the main collection loop runs
-- **Impact**: 
-  - Lower values = more frequent market updates and API calls
-  - Higher values = less frequent updates, reduced API usage
-  - Minimum recommended: 60 seconds to avoid rate limits
+### Numerical Data Collection
 
 #### `top-number-of-coins`
 - **Type**: Integer
@@ -106,7 +97,12 @@ The configuration file controls all aspects of data collection behavior. Each pa
   - Affects all price calculations and historical data
   - Common options: "usd", "eur", "btc", "eth"
 
-### Historical Data Configuration
+#### `coingecko_api_key`
+- **Type**: String
+- **Effect**: CoinGecko API keys for fetching cryptocurrency market data
+- **Impact**:
+  - Keys are optional but to avoid rate limit is highly recommended
+  - Can be obtained for free on CoinGecko website
 
 #### `historical-data-days`
 - **Type**: Integer
@@ -137,7 +133,7 @@ The configuration file controls all aspects of data collection behavior. Each pa
   - Symbols are matched case-insensitively
   - Useful for excluding synthetic or derivative tokens
 
-### News Collection
+### Sentiment Collection
 
 #### `newsapi_key`
 - **Type**: Array of strings
@@ -150,15 +146,13 @@ The configuration file controls all aspects of data collection behavior. Each pa
 
 #### `media-interval`
 - **Type**: Integer (minutes)
-- **Default**: 5
+- **Default**: 15
 - **Effect**: How often to fetch news and Reddit data
 - **Impact**:
   - Lower values = more frequent news updates but higher API usage
   - News sources update multiple times per hour
   - Minimum recommended: 5 minutes to avoid rate limits
   - Affects both news and Reddit collection timing
-
-### Social Media Configuration
 
 #### `KEYWORDS`
 - **Type**: Array of strings
@@ -203,15 +197,6 @@ The configuration file controls all aspects of data collection behavior. Each pa
    - When new coins enter the top N, immediately fetches their data
    - Collects full historical data and recent news/social media
 
-### API Rate Limiting
-
-The system implements several rate limiting strategies:
-
-- **CoinGecko**: 3-second delays between historical requests
-- **CryptoCompare**: 0.5-second delays between requests
-- **NewsAPI**: Key rotation when rate limits hit
-- **Reddit**: 0.5-second delays, 10-second delays between subreddits
-
 ### Data Storage
 
 All data is stored in CSV format under the `logs/` directory:
@@ -237,38 +222,6 @@ Returns current live market data from `live_data/live_data.csv`.
 ### `GET /api/live_sentiment`
 Returns current sentiment data from `live_data/live_sentiment.csv`.
 
-## Configuration Examples
-
-### High-Frequency Trading Setup
-```json
-{
-  "market-update-frequency": 30,
-  "top-number-of-coins": 20,
-  "media-interval": 3,
-  "historical-data-days": 30
-}
-```
-
-### Research/Analysis Setup
-```json
-{
-  "market-update-frequency": 300,
-  "top-number-of-coins": 100,
-  "media-interval": 15,
-  "historical-data-days": 365
-}
-```
-
-### Resource-Constrained Setup
-```json
-{
-  "market-update-frequency": 300,
-  "top-number-of-coins": 10,
-  "media-interval": 30,
-  "historical-data-days": 30
-}
-```
-
 ## Monitoring and Logs
 
 The system provides console output for monitoring:
@@ -287,36 +240,6 @@ Core Python packages required:
 - `pandas`: Data manipulation (server only)
 - `numpy`, `scipy`: Numerical computing
 - `torch`: PyTorch for transformer models
-
-## Troubleshooting
-
-### Common Issues
-
-1. **API Rate Limits**:
-   - Increase delays in configuration
-   - Add more NewsAPI keys
-   - Reduce `top-number-of-coins`
-
-2. **Memory Usage**:
-   - Reduce `historical-data-days`
-   - Decrease `top-number-of-coins`
-   - Clear old log files periodically
-
-3. **Missing Data**:
-   - Check API key validity
-   - Verify network connectivity
-   - Review console logs for specific errors
-
-### Performance Optimization
-
-- Use SSD storage for faster CSV operations
-- Consider database storage for larger datasets
-- Implement data compression for long-term storage
-- Monitor system resources during collection
-
-## License
-
-MIT License - see LICENSE file for details.
 
 ## Contributing
 

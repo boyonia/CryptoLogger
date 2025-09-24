@@ -2,8 +2,18 @@ import csv
 import os
 import requests
 import time
+import json
 from .analysis import priceOutlier
 from datetime import datetime, timezone, timedelta
+
+def load_config():
+    config_path = os.path.join(os.path.dirname(__file__), '..', 'config.json')
+    try:
+        with open(config_path, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"[CoinGecko] Error loading config: {e}")
+        return None
 
 def log(coins):
     now = datetime.now(timezone.utc)
@@ -114,8 +124,11 @@ def fetchDailyHistory(name, currency, days):
         'interval': 'daily'
     }
 
+    config = load_config()
+    api_key = config.get("coingecko_api_key")
+
     headers = {
-        'x-cg-demo-api-key': "CG-sj1ZEEQGq8xie1ow9BeHrvbg"
+        'x-cg-demo-api-key': api_key
     }
 
     response = requests.get(url, params=params, headers=headers)

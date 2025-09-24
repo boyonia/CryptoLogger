@@ -1,0 +1,13 @@
+{
+  "top-number-of-coins": 50,
+  "selection-margin": 20,
+  "currency": "usd",
+  "historical-data-days": 90,
+  "stable-coin-keywords": ["usd", "usdt", "usdc", "busd", "dai", "tusd", "usdp", "usdd", "gusd", "fdusd"],
+  "coins_ignored": ["cbbtc", "wsteth", "lbtc"],
+  "coingecko_api_key": "",
+  "newsapi_key": [""],
+  "media-interval": 15,
+  "KEYWORDS":["crypto statistics or news","money gain or loss"],
+  "BLOCKLIST": ["joke", "funny", "shitpost", "troll", "satire","sarcasm", "clown", "cringe", "banter", "comic", "gag"]
+}
